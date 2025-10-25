@@ -1,0 +1,14 @@
+path: public/robots.txt
+
+Tüm botlar için genel kural
+
+User-agent: *
+Allow: /
+
+Kanonik Host Adresi (www ile)
+
+Host: https://www.synarasystem.com
+
+Site Haritası Konumu
+
+Sitemap: https://www.synarasystem.com/sitemap.xml
