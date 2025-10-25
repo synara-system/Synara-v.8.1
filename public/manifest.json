@@ -1,0 +1,8 @@
+{
+  "short_name": "Synara System",
+  "name": "Synara System | Bütünsel Zeka ile Piyasayı Keşfedin",
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#111827",
+  "background_color": "#111827"
+}
