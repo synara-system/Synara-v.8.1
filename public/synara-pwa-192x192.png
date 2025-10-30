@@ -1,0 +1,27 @@
+{
+  "name": "Synara System",
+  "short_name": "Synara",
+  "description": "Karmaşık Piyasaları Tek Bir Karara İndirgeyin. Synara'nın Bütünsel Zeka Matrisi.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#111827",
+  "theme_color": "#10b981",
+  "icons": [
+    {
+      "src": "/synara-pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/synara-pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/synara_logo_hq.svg",
+      "sizes": "1024x1024",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
