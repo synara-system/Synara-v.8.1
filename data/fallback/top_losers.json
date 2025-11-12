@@ -1,0 +1,4 @@
+[
+  { "symbol": "TSLA", "changesPercentage": -3.12, "price": 214.70, "companyName": "Tesla Inc" },
+  { "symbol": "NVDA", "changesPercentage": -1.45, "price": 118.32, "companyName": "NVIDIA Corp" }
+]

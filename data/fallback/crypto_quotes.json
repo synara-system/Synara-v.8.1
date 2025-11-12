@@ -1,0 +1,6 @@
+[
+  { "symbol": "BTCUSD", "price": 109810.0, "changePercentage": -0.85 },
+  { "symbol": "ETHUSD", "price": 3852.73, "changePercentage": 0.24 },
+  { "symbol": "SOLUSD", "price": 186.07, "changePercentage": 0.12 },
+  { "symbol": "XRPUSD", "price": 0.5909, "changePercentage": 0.36 }
+]

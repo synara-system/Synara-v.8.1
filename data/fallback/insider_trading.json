@@ -1,0 +1,4 @@
+[
+  { "symbol": "AAPL", "transactionType": "P-Purchase", "securitiesTransacted": 10000, "price": 170.5, "reportingName": "Tim Cook", "transactionDate": "2025-10-20" },
+  { "symbol": "MSFT", "transactionType": "S-Sale",     "securitiesTransacted": 5000,  "price": 406.2, "reportingName": "Satya Nadella", "transactionDate": "2025-10-21" }
+]

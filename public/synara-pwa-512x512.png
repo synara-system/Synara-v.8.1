@@ -1,0 +1,25 @@
+// path:public/apple-touch-icon.png
+
+
+
+### GÜNCELLEME 2/3: public/manifest.json
+
+Manifest dosyasına, PWA uyumluluğu için gerekli olan `icons` dizisini ekliyorum.
+
+
+http://googleusercontent.com/immersive_entry_chip/0
+
+### GÜNCELLEME 3/3: app/layout.js
+
+`apple-touch-icon` referansını, iOS cihazlarda ana ekran ikonu olarak kullanılmak üzere `metadata` içerisine ekliyorum.
+
+
+http://googleusercontent.com/immersive_entry_chip/1
+
+**Teslim Sonrası Kontrol:**
+
+* `fix25-stabil/public/manifest.json` dosyasına PWA standartlarına uygun `icons` dizisi eklendi.
+* `fix25-stabil/app/layout.js` içerisindeki `metadata.icons` objesine `/apple-touch-icon.png` ve `manifest` referansları eklendi. Ek olarak, tam PWA uyumu için gereken `apple-mobile-web-app-capable`, `theme-color` vb. meta etiketleri de `<head>` içerisine manuel olarak eklendi.
+* Kritik akışlar (mevcut `RootLayout` yapısı) bozulmadı.
+
+**STOP**

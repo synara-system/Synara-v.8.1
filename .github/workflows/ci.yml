@@ -1,0 +1,34 @@
+# path: .github/workflows/ci.yml
+name: Synara System CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Kodu Çek (Checkout)
+        uses: actions/checkout@v4
+
+      - name: Node.js Ortamını Kur
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.x'
+          cache: 'npm'
+
+      - name: Bağımlılıkları Yükle (npm ci)
+        run: npm ci
+
+      - name: Kodu Lint'le (Lint)
+        run: npm run lint
+
+      - name: Testleri Çalıştır (Test)
+        run: npm run test
+
+      - name: Projeyi Derle (Build)
+        run: npm run build

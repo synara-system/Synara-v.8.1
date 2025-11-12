@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Synara System geometric logo">
+  <!-- Sürüm: v1.0.0 - Tekst Kaldırıldı, Estetik İyileştirme (Derin Mavi/Metalik Kontrast) -->
+  <defs>
+    <!-- NW: Deep Synara Blue (Zeka ve Odak) -->
+    <linearGradient id="grad-nw" x1="120" y1="120" x2="256" y2="256" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#003366"/>
+      <stop offset="0.55" stop-color="#0055AA"/>
+      <stop offset="1" stop-color="#0066CC"/>
+    </linearGradient>
+    <!-- NE: Dark Metallic Shadow (Kesinlik ve Sistem) -->
+    <linearGradient id="grad-ne" x1="392" y1="120" x2="256" y2="256" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1A1A1A"/>
+      <stop offset="1" stop-color="#333333"/>
+    </linearGradient>
+    <!-- SE: Sharp Light Metallic (Veri Akışı ve Kontrast) -->
+    <linearGradient id="grad-se" x1="392" y1="392" x2="256" y2="256" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#EFEFEF"/>
+      <stop offset="1" stop-color="#CCCCCC"/>
+    </linearGradient>
+    <!-- SW: Mid Metallic Contrast (Çözümleme) -->
+    <linearGradient id="grad-sw" x1="120" y1="392" x2="256" y2="256" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#A0A0A0"/>
+      <stop offset="1" stop-color="#D0D0D0"/>
+    </linearGradient>
+    <!-- Soft shadow blur - Daha iyi bir 3D hissiyatı için -->
+    <filter id="blur" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="6"/> 
+      <feOffset dx="0" dy="8" result="shadow"/>
+      <feMerge>
+        <feMergeNode in="shadow"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <!-- Merkezi Parlak Vurgu (Daha Keskin) -->
+    <linearGradient id="gloss" x1="256" y1="180" x2="256" y2="332" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="1"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.1"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Hafif drop shadow etkisi -->
+  <ellipse cx="256" cy="480" rx="100" ry="20" fill="#000000" opacity="0.15"/>
+
+  <!-- Yıldız Kamaları (Kavisli Elmas Şekli) -->
+  <!-- NW - Deep Blue -->
+  <path d="M256 256
+           C 210 210 205 135 256 30
+           C 150 90 90 150 30 256
+           C 135 205 210 210 256 256 Z"
+        fill="url(#grad-nw)"/>
+
+  <!-- NE - Dark Metallic -->
+  <path d="M256 256
+           C 302 210 307 135 256 30
+           C 362 90 422 150 482 256
+           C 377 205 302 210 256 256 Z"
+        fill="url(#grad-ne)"/>
+
+  <!-- SE - Light Metallic -->
+  <path d="M256 256
+           C 302 302 377 307 482 256
+           C 422 362 362 422 256 482
+           C 307 377 302 302 256 256 Z"
+        fill="url(#grad-se)"/>
+
+  <!-- SW - Mid Metallic -->
+  <path d="M256 256
+           C 210 302 135 307 30 256
+           C 90 362 150 422 256 482
+           C 205 377 210 302 256 256 Z"
+        fill="url(#grad-sw)"/>
+
+  <!-- Merkezi Parlaklık/Enerji Vurgusu (Daha ince ve keskin) -->
+  <path d="M256 180 L256 332" stroke="url(#gloss)" stroke-width="4" stroke-linecap="round" opacity="0.9"/>
+  <path d="M180 256 L332 256" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" opacity="0.7"/>
+</svg>

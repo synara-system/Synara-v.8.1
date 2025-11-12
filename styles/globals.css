@@ -1,0 +1,831 @@
+/* path: styles/globals.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* --- KRİTİK INLINE CSS TAŞIMA --- */
+/* Base Layout Styles (CLS Mitigation) */
+body {
+  background-color: #0b1220;
+  color: #F9FAFB;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* YENİ YÜKLEYİCİ STİLİ (Loader Styles) */
+.loader {
+  width: 60px;
+  height: 60px;
+  position: relative;
+}
+
+.loader::before, .loader::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 4px solid transparent;
+  animation: synara-loader 2s infinite;
+}
+
+.loader::after {
+  animation-delay: -1s;
+}
+
+/* YENİ YÜKLEYİCİ ANİMASYONU */
+@keyframes synara-loader {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+    border-color: #facc15; /* yellow */
+  }
+  50% {
+    opacity: 0.7;
+    border-color: #4f46e5; /* indigo */
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0;
+    border-color: #38bdf8; /* sky */
+  }
+}
+
+/* h-screen ve min-h-screen yerine 100vh kullanıyoruz (dvh fallback'i zaten aşağıda) */
+.min-h-screen { min-height: 100vh; }
+/* --- INLINE CSS TAŞIMA BİTİŞ --- */
+
+:root {
+  --glow-color-primary: rgba(79, 70, 229, 0.7);
+  --glow-color-secondary: rgba(255, 204, 0, 0.7);
+  
+  /* KRİTİK: DİNAMİK GLOW RENKLERİ (Tailwind sınıflarındaki 500'lük tonlar) */
+  --glow-color-indigo: #818cf8; /* indigo-300 / indigo-500 */
+  --glow-color-green: #4ade80; /* green-400 / green-500 */
+  --glow-color-yellow: #facc15; /* yellow-400 / yellow-500 */
+  --glow-color-orange: #fb923c; /* orange-400 / orange-500 */
+  --glow-color-red: #f87171; /* red-400 / red-500 */
+  --glow-color-sky: #38bdf8; /* sky-400 / sky-500 */
+  --glow-color-amber: #fbbf24; /* amber-400 / amber-500 */
+  
+  /* Diğer renkler */
+  --glow-color-purple: #a855f7;
+  --glow-color-teal: #2dd4bf;
+  --glow-color-pink: #f472b6;
+
+  /* Mobil klavyede 100vh zıplamasını durdurmak için dvh fallback */
+  --vh: 1vh; /* eski tarayıcı fallback'i */
+}
+/* 1) Chat ile çakışmaması için global smooth'u kapatın. (User'ın isteği) */
+html { scroll-behavior: auto; }
+
+/* 2) Mobil klavyede 100vh zıplamasını durdurmak için dvh/svh fallback */
+@supports (height: 100dvh) {
+  .h-screen-safe { height: 100dvh; }
+  .min-h-screen-safe { min-height: 100dvh; }
+}
+@supports not (height: 100dvh) {
+  .h-screen-safe { height: calc(var(--vh) * 100); }
+  .min-h-screen-safe { min-height: calc(var(--vh) * 100); }
+}
+
+/* 3) Sayfa değil, sadece chat alanı scroll olsun ve yatay kaydırma engellensin: */
+html, body { height: 100%; overflow-x: hidden; }
+
+
+/* --- KRİTİK FİX: ODAK ÇERÇEVESİ PROTOKOLÜ (GÜNCELLENDİ) --- */
+/* Sadece klavye ile gezinildiğinde görünen, modern odaklanma stili. Fare tıklamalarında görünmez. */
+:is(a, button, input, textarea, select):focus-visible {
+  outline: none !important;
+  box-shadow: 0 0 0 2px #111827, 0 0 0 4px rgba(79, 70, 229, 0.7) !important; 
+  border-color: #4F46E5 !important;
+  animation: none !important; 
+}
+/* --- ODAK ÇERÇEVESİ PROTOKOLÜ BİTİŞ --- */
+
+
+/* --- KRİTİK: KAYDIRMA ÇUBUĞU DÜZENLEMESİ (SADECE GEREKTİĞİNDE GÖSTER) --- */
+/* WebKit (Chrome, Safari) - GENEL SAYFA İÇİN GİZLEME KURALLARI */
+::-webkit-scrollbar { 
+    width: 6px; 
+    height: 6px;
+    background-color: transparent;
+}
+
+::-webkit-scrollbar-thumb { 
+    /* Başlangıçta şeffaf (gizli) */
+    background-color: rgba(79, 70, 229, 0.1); 
+    border-radius: 3px; 
+    transition: background-color 0.3s ease;
+}
+
+/* Yalnızca body veya html (yani sayfa) üzerine gelindiğinde çubuğu göster */
+html:hover::-webkit-scrollbar-thumb, body:hover::-webkit-scrollbar-thumb { 
+    background-color: rgba(79, 70, 229, 0.5); /* Hafif görünürlük */
+    border-color: #111827; 
+}
+
+/* Fare ile üzerine gelindiğinde daha belirgin yap */
+::-webkit-scrollbar-thumb:hover { 
+    background-color: #4F46E5; /* Indigo-600 */
+}
+
+/* Firefox support (genel sayfa için gizleme) */
+html { 
+    scrollbar-color: rgba(79, 70, 229, 0.2) transparent; 
+    scrollbar-width: thin; 
+}
+
+/* KRİTİK DÜZELTME: Chatbox'ın sabit scrollbar stilleri */
+/* Bu CSS, SynaraAssistantClient.js'deki .chat-messages-container sınıfına atanmıştır. */
+.chat-messages-container {
+    overflow-y: auto !important; /* Scrollbar'ı göstermek için */
+    scrollbar-width: thin; /* Firefox */
+    /* Firefox'ta sürekli görünürlük için track rengi (arkaplan) ve thumb rengi ayarlandı */
+    scrollbar-color: #4F46E5 #1f2937; 
+}
+
+.chat-messages-container::-webkit-scrollbar {
+    width: 6px; 
+    background-color: #1f2937; /* Track rengini belirgin yap */
+}
+/* Chatbox'ın thumb'ı (tırnağı) için daima görünür stil */
+.chat-messages-container::-webkit-scrollbar-thumb {
+    background-color: #4F46E5; /* Sürekli görünür, belirgin renk */
+    border-radius: 3px; 
+    border: 1px solid #1f2937; /* Koyu border */
+}
+
+/* Chatbox'ın kendi üzerine gelindiğinde sadece rengi değiştir, gizleme/gösterme mantığı yok */
+.chat-messages-container:hover::-webkit-scrollbar-thumb {
+    background-color: #6366f1;
+    border-color: #1f2937;
+}
+
+/* --- KAYDIRMA ÇUBUĞU BİTİŞ --- */
+
+
+@layer components {
+  /* --- (FMP v3.8) Market Pulse Widget Stilleri Eklendi --- */
+  /* (v3.1) Eksik olan .widget-base ve .widget-title stilleri eklendi */
+  .widget-base {
+    @apply bg-gray-900/70 backdrop-blur-sm border border-gray-700/50 rounded-lg p-4 shadow-lg;
+  }
+  .widget-title {
+    @apply text-base font-semibold text-gray-200 flex items-center;
+  }
+  /* --- (FMP v3.8) SONU --- */
+
+  /* --- (FMP v4.1) YENİ SEKMELİ (TAB) WIDGET STİLLERİ EKLENDİ --- */
+  .tab-button {
+    @apply flex-1 sm:flex-none text-sm font-medium text-gray-400 py-2 px-3 sm:px-4 flex items-center justify-center
+           border-b-2 border-transparent
+           hover:text-white hover:border-gray-500
+           transition-colors duration-200;
+  }
+  .tab-button.active {
+    @apply text-indigo-400 border-indigo-500;
+  }
+  /* --- (FMP v4.1) SONU --- */
+
+  /* KRİTİK GÜNCELLEME 1: Gradient Text Style */
+  .gradient-text {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(90deg, #4F46E5, #818CF8, #4F46E5);
+  }
+  .gradient-text-orange {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(90deg, #fb923c, #facc15, #fb923c); /* Turuncu-Sarı Gradyan */
+  }
+
+  /* --- KRİTİK YENİ EKLENTİ: FÜTÜRİSTİK FOOTER STİLLERİ --- */
+  
+  /* Yasal Uyarı Kutusu (Görseldeki Kırmızı Neon Çerçeve) */
+  .legal-disclaimer-box {
+      /* Kırmızı neon gölge ve border (Görseldeki gibi) */
+      box-shadow: 0 0 10px rgba(239, 68, 68, 0.4); 
+      border: 1px solid #DC2626; /* Red-600 */
+      /* Metin renklerini Footer.js'ten alıyor */
+  }
+
+  /* Footer Başlık Alt Çizgisi (Görseldeki gibi ince ve belirgin) */
+  .footer-heading-line {
+      @apply relative pb-1;
+  }
+  .footer-heading-line::after {
+      content: '';
+      @apply absolute bottom-0 left-0 w-8 h-px bg-yellow-400 transition-all duration-300;
+  }
+  .footer-heading-line:hover::after {
+       @apply w-16 bg-indigo-400; /* Hover'da renk ve boyut değiştir */
+  }
+
+  /* --- FOOTER STİLLERİ BİTİŞ --- */
+
+  @layer components {
+    /* --- KRİTİK FİX: DİNAMİK GLOW PROTOKOLÜ (Tüm Renkler İçin) --- */
+
+    /* Red Glow */
+    .synara-red-glow {
+        box-shadow: 0 0 10px rgba(239, 68, 68, 0.2); 
+        transition: all 0.4s ease-in-out;
+    }
+    
+    .synara-red-glow:hover {
+        /* Fütüristik, agresif neon gölge efekti */
+        box-shadow: 
+            0 0 15px rgba(239, 68, 68, 0.5), /* Güçlü merkezi gölge */
+            0 0 30px rgba(239, 68, 68, 0.3); /* Geniş ve soluk dış gölge */
+        /* Ortak Hover Efektleri */
+        transform: translateY(-1px) scale(1.005);
+        border-color: rgba(239, 68, 68, 0.8) !important;
+    }
+
+    /* Indigo Glow */
+    .synara-indigo-glow {
+        box-shadow: 0 0 10px rgba(79, 70, 229, 0.2);
+        transition: all 0.4s ease-in-out;
+    }
+    .synara-indigo-glow:hover {
+        box-shadow: 0 0 15px rgba(79, 70, 229, 0.5), 0 0 30px rgba(79, 70, 229, 0.3);
+        transform: translateY(-1px) scale(1.005);
+        border-color: rgba(79, 70, 229, 0.8) !important;
+    }
+    
+    /* Green Glow */
+    .synara-green-glow {
+        box-shadow: 0 0 10px rgba(16, 185, 129, 0.2); /* 500'lük ton (Green 600-700 aralığı) */
+        transition: all 0.4s ease-in-out;
+    }
+    .synara-green-glow:hover {
+        box-shadow: 0 0 15px rgba(16, 185, 129, 0.5), 0 0 30px rgba(16, 185, 129, 0.3);
+        transform: translateY(-1px) scale(1.005);
+        border-color: rgba(16, 185, 129, 0.8) !important;
+    }
+
+    /* Yellow Glow */
+    .synara-yellow-glow {
+        box-shadow: 0 0 10px rgba(250, 204, 21, 0.2);
+        transition: all 0.4s ease-in-out;
+    }
+    .synara-yellow-glow:hover {
+        box-shadow: 0 0 15px rgba(250, 204, 21, 0.5), 0 0 30px rgba(250, 204, 21, 0.3);
+        transform: translateY(-1px) scale(1.005);
+        border-color: rgba(250, 204, 21, 0.8) !important;
+    }
+    
+    /* Orange Glow */
+    .synara-orange-glow {
+        box-shadow: 0 0 10px rgba(251, 146, 60, 0.2);
+        transition: all 0.4s ease-in-out;
+    }
+    .synara-orange-glow:hover {
+        box-shadow: 0 0 15px rgba(251, 146, 60, 0.5), 0 0 30px rgba(251, 146, 60, 0.3);
+        transform: translateY(-1px) scale(1.005);
+        border-color: rgba(251, 146, 60, 0.8) !important;
+    }
+
+    /* Sky Glow (Mavi tonlar) */
+    .synara-sky-glow {
+        box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
+        transition: all 0.4s ease-in-out;
+    }
+    .synara-sky-glow:hover {
+        box-shadow: 0 0 15px rgba(56, 189, 248, 0.5), 0 0 30px rgba(56, 189, 248, 0.3);
+        transform: translateY(-1px) scale(1.005);
+        border-color: rgba(56, 189, 248, 0.8) !important;
+    }
+    
+    /* Global Hover Düzeltmesi: NewsArticleGrid'deki hover:-translate-y-1 transformunu destekler */
+    /* Bu, tüm kartların transformasyonunu daha yumuşak hale getirir. */
+    [class*="synara-"][class*="-glow"]:hover {
+        /* Hover'da translate-y-1 ve scale'i yeniden uygula */
+        transform: translateY(-4px) scale(1.01);
+    }
+    /* --- KRİTİK FİX BİTİŞ --- */
+}
+  
+  /* KRİTİK FİX: Prose img ortalama kuralı geri getirildi ve güçlendirildi */
+  /* Bu, makale içeriğindeki görselleri ortalamayı kesinleştirir. */
+  .prose img, .prose p img, .prose-img-center img { 
+      margin-left: auto !important; 
+      margin-right: auto !important;
+      display: block !important; /* Ortalamak için blok seviyesinde olmalı */
+      max-width: 100% !important;
+      height: auto !important; /* Kesilme sorununu çözer */
+  }
+  /* KRİTİK FİX BİTİŞ */
+    
+  .active-nav-glow {
+    @apply relative bg-indigo-900/50 border-2 border-indigo-500/50; 
+    box-shadow: 0 0 10px rgba(79, 70, 229, 0.4), 0 0 5px rgba(129, 140, 248, 0.3);
+  }
+    
+  .glow-on-hover-btn-primary {
+    @apply relative inline-flex items-center justify-center px-6 py-3 text-lg font-bold text-white transition-all duration-300 bg-gray-900 border-2 border-indigo-700/50 rounded-xl overflow-hidden;
+    box-shadow: 0 0 5px transparent;
+    transform: perspective(1px) translateZ(0);
+  }
+  .glow-on-hover-btn-primary:before {
+    content: '';
+    position: absolute;
+    inset: -5px;
+    border-radius: 12px;
+    background: linear-gradient(45deg, #4f46e5, #818cf8, #4f46e5);
+    background-size: 400%;
+    z-index: -1;
+    filter: blur(8px);
+    transition: opacity .4s ease-in-out;
+    animation: glowing 15s linear infinite;
+    opacity: 0;
+  }
+  .glow-on-hover-btn-primary:hover:before {
+    opacity: 1;
+  }
+  .glow-on-hover-btn-primary:after {
+    z-index: -1;
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: #0b1220;
+    border-radius: 10px;
+    transition: background 0.3s ease;
+  }
+  .glow-on-hover-btn-primary:hover:after {
+    background: #1f2937;
+  }
+  
+  .synth-btn-secondary {
+     @apply relative inline-flex items-center justify-center px-6 py-3 text-lg font-bold transition-all duration-300 bg-transparent border-2 border-yellow-500/50 rounded-xl text-yellow-400 hover:text-gray-900 hover:bg-yellow-500 active:scale-95;
+     box-shadow: 0 0 10px rgba(250, 204, 21, 0.2);
+  }
+
+    .module-card {
+        @apply relative block p-px overflow-hidden rounded-2xl bg-gray-900/80 transition-all duration-300 h-full;
+        transform-style: preserve-3d;
+        transform: translateZ(0); 
+        will-change: transform, box-shadow; 
+    }
+    .module-card:hover {
+        transform: perspective(1000px) rotateX(2deg) rotateY(2deg) scale(1.02); 
+        box-shadow: 0 25px 50px rgba(0,0,0,0.6); 
+    }
+    .module-card-content {
+        @apply relative p-6 h-full flex flex-col;
+    }
+    
+    .stars-container, .stars-container-assistant {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0; 
+        pointer-events: none;
+    }
+
+    #stars1, #stars2, #stars3, #stars1-assistant, #stars2-assistant, #stars3-assistant {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    #stars1, #stars1-assistant {
+      background-image: 
+        radial-gradient(1px 1px at 20px 30px, #eee, rgba(0,0,0,0)), 
+        radial-gradient(1px 1px at 40px 70px, #fff, rgba(0,0,0,0)), 
+        radial-gradient(1px 1px at 50px 160px, #ddd, rgba(0,0,0,0)), 
+        radial-gradient(2px 2px at 90px 40px, #fff, rgba(0,0,0,0)), 
+        radial-gradient(1px 1px at 130px 80px, #fff, rgba(0,0,0,0)), 
+        radial-gradient(1px 1px at 160px 120px, #ddd, rgba(0,0,0,0));
+      background-size: 250px 250px;
+      animation: stars-move 200s linear infinite;
+      will-change: transform;
+    }
+    #stars2, #stars2-assistant {
+      background-image: 
+        radial-gradient(1px 1px at 40px 20px, #fff, rgba(0,0,0,0)), 
+        radial-gradient(1px 1px at 80px 60px, #ddd, rgba(0,0,0,0)), 
+        radial-gradient(2px 2px at 120px 140px, #fff, rgba(0,0,0,0)), 
+        radial-gradient(2px 2px at 170px 180px, #ddd, rgba(0,0,0,0)), 
+        radial-gradient(2px 2px at 200px 100px, #fff, rgba(0,0,0,0));
+      background-size: 300px 300px;
+      animation: stars-move 150s linear infinite;
+      will-change: transform;
+    }
+    #stars3, #stars3-assistant {
+      background-image: 
+        radial-gradient(2px 2px at 10px 10px, #fff, rgba(0,0,0,0)), 
+        radial-gradient(2px 2px at 150px 150px, #ddd, rgba(0,0,0,0));
+      background-size: 350px 350px;
+      animation: stars-move 100s linear infinite;
+      will-change: transform;
+    }
+    
+    .holographic-grid {
+        background-image: linear-gradient(to right, rgba(255, 255, 255, 0.1) 1px, transparent 1px), linear-gradient(to bottom, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+        animation: grid-scan 15s linear infinite;
+        will-change: background-position;
+    }
+
+    .simplified-orbit-container {
+        @apply relative w-[400px] h-[400px] lg:w-[500px] lg:h-[500px] flex items-center justify-center;
+        transform: translateZ(0);
+        will-change: transform;
+    }
+    .system-core {
+        @apply w-32 h-32 rounded-full bg-indigo-900/30 border-2 border-indigo-500/50 flex items-center justify-center shadow-2xl;
+        animation: pulse-core 3s infinite ease-in-out;
+        will-change: transform, box-shadow;
+        transform: translateZ(0);
+    }
+    .satellite-wrapper {
+        @apply absolute top-1/2 left-1/2;
+        animation: simplified-orbit var(--orbit-duration, 20s) linear infinite;
+        animation-delay: var(--orbit-delay, 0s);
+        will-change: transform;
+        transform: translateZ(0);
+    }
+    .satellite-node {
+        @apply relative w-5 h-5 rounded-full shadow-lg cursor-pointer;
+        transform: translate(var(--orbit-radius, 150px), -50%) translateZ(0);
+        transition: all 0.3s ease;
+        animation: pulse-satellite 2.5s infinite;
+        will-change: transform;
+    }
+    .satellite-node.bg-green-400 { animation-name: pulse-green; animation-delay: 0.2s; }
+    .satellite-node.bg-yellow-400 { animation-name: pulse-yellow; animation-delay: 0.4s; }
+    .satellite-node.bg-orange-400 { animation-name: pulse-orange; animation-delay: 0.6s; }
+    .satellite-node.bg-red-400 { animation-name: pulse-red; animation-delay: 0.8s; }
+    
+    .satellite-label {
+        @apply absolute bottom-full left-1/2 -translate-x-1/2 mb-3 px-3 py-1 bg-gray-900/80 text-white text-xs rounded-md whitespace-nowrap opacity-0 transition-all pointer-events-none;
+        transform: translate(-50%, -10px);
+    }
+    .satellite-wrapper:hover .satellite-node {
+        transform: translate(var(--orbit-radius, 150px), -50%) scale(1.5) translateZ(0);
+    }
+    .satellite-wrapper:hover .satellite-label {
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
+    
+    .glow-pulse-system {
+        width: 100%;
+        height: 100%;
+        will-change: transform;
+        transform: translateZ(0);
+    }
+    .glow-pulse-system:before {
+         content: '';
+         position: absolute;
+         top: 50%;
+         left: 50%;
+         width: 120%;
+         height: 120%;
+         border-radius: 50%;
+         background: var(--glow-color-secondary);
+         filter: blur(25px);
+         transform: translate(-50%, -50%) rotate(0deg) translateZ(0);
+         animation: rotate-glow-slow 30s linear infinite;
+         mix-blend-mode: hard-light;
+         opacity: 0.5;
+         will-change: transform;
+    }
+    .glow-pulse-system:after {
+         content: '';
+         position: absolute;
+         top: 50%;
+         left: 50%;
+         width: 80%;
+         height: 80%;
+         border-radius: 50%;
+         background: var(--glow-color-primary);
+         filter: blur(25px);
+         transform: translate(-50%, -50%) rotate(0deg) translateZ(0);
+         animation: rotate-glow-fast 15s linear infinite reverse;
+         mix-blend-mode: hard-light;
+         opacity: 0.5;
+         will-change: transform;
+    }
+
+    .timeline-segment {
+        @apply absolute top-1/2 -translate-y-1/2 h-3 rounded-full opacity-70 transition-all duration-300;
+        box-shadow: 0 0 8px 0px currentColor;
+    }
+    .timeline-segment:hover {
+        @apply opacity-100 h-4;
+    }
+    .timeline-segment-label {
+        @apply absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none;
+    }
+    .timeline-marker {
+        @apply absolute top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-white border-4 border-gray-900 z-10;
+        box-shadow: 0 0 10px 2px #fff;
+    }
+    .timeline-marker-label {
+        @apply absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-white text-black text-xs font-bold rounded-md whitespace-nowrap;
+    }
+    
+    .globe {
+        @apply absolute w-[550px] h-[550px] md:w-[600px] md:h-[600px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-center bg-no-repeat bg-cover rounded-full;
+        /* KRİTİK HATA KAYNAĞI: Bu satır kaldırıldı. */
+        box-shadow: inset 0 0 40px #111827, inset 20px 0 80px #4f46e5;
+        will-change: background-position;
+    }
+    .globe-overlay {
+        @apply absolute inset-0 rounded-full;
+        background: radial-gradient(circle at 25% 40%, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 40%);
+    }
+
+    .market-point-container {
+        @apply absolute;
+        transform: translateZ(0);
+        will-change: transform;
+    }
+    .market-point {
+        @apply w-3 h-3 rounded-full bg-red-500 border-2 border-white;
+    }
+    .market-point.active {
+        @apply bg-green-400;
+        animation: pulse-icon 1.5s infinite; 
+        transform: translateZ(0);
+        will-change: transform, box-shadow;
+    }
+    .market-label {
+        @apply absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900/80 text-white text-xs rounded-md whitespace-nowrap opacity-0 transition-opacity pointer-events-none;
+    }
+    .market-point-container:hover .market-label {
+        opacity: 1;
+    }
+    
+    .dashboard-bg {
+        @apply relative overflow-hidden;
+    }
+    .dashboard-bg::before {
+        content: '';
+        @apply absolute inset-0 z-[-2];
+        background-image: 
+            linear-gradient(to right, rgba(79, 70, 229, 0.08) 1px, transparent 1px), 
+            linear-gradient(to bottom, rgba(79, 70, 229, 0.08) 1px, transparent 1px);
+        background-size: 3rem 3rem;
+        animation: pan-grid 60s linear infinite;
+    }
+    .dashboard-bg::after {
+        content: '';
+        @apply absolute z-[-1] top-0 left-0 w-full h-full;
+        background: radial-gradient(ellipse at 20% 80%, rgba(79, 70, 229, 0.2) 0%, transparent 50%),
+                    radial-gradient(ellipse at 80% 30%, rgba(139, 92, 246, 0.15) 0%, transparent 50%);
+    }
+    
+    .futuristic-card {
+        @apply bg-gray-800/60 backdrop-blur-sm rounded-2xl border border-gray-700/50 shadow-lg transition-all duration-300;
+    }
+    .futuristic-card:hover {
+        @apply border-indigo-500/70 shadow-indigo-900/40;
+    }
+    .futuristic-card-light {
+        @apply bg-gray-800/40 backdrop-blur-sm rounded-xl border border-gray-700/50;
+    }
+    
+    .prose code:not(pre code) {
+        @apply bg-gray-700/50 text-yellow-300 px-1 py-0.5 rounded-md text-sm font-mono border border-gray-600;
+    }
+    .prose pre {
+        @apply bg-gray-900/70 border border-indigo-700/50 rounded-xl p-4 overflow-x-auto shadow-xl;
+    }
+    .prose pre code {
+        @apply text-sm text-gray-300;
+    }
+    
+    .prose table {
+        @apply table-auto w-full border-collapse;
+    }
+    
+    .prose table td, .prose table th {
+        @apply whitespace-normal;
+    }
+    
+    .prose .table-wrapper {
+         @apply overflow-x-auto;
+    }
+    
+    .data-stream-pulse {
+        @apply absolute inset-0 flex items-center space-x-2;
+        animation: data-flow 10s linear infinite; 
+    }
+    .data-point {
+        @apply relative w-1.5 h-1.5 rounded-full flex-shrink-0;
+        animation: pulse-stream 3s infinite ease-in-out;
+    }
+    
+    .matrix-cell-row, .system-matrix-grid {
+        display: none;
+    }
+    
+    .command-list-item {
+        @apply flex items-center gap-4 p-4 rounded-xl bg-gray-800/60 border border-gray-700/50 transition-all duration-300 transform;
+    }
+    .command-list-item:hover {
+        @apply bg-indigo-900/50 border-indigo-500/50 -translate-x-1;
+    }
+    .command-list-item-icon-wrapper {
+        @apply flex-shrink-0 bg-gray-900/50 p-3 rounded-lg border border-gray-700/50 transition-colors;
+    }
+    .command-list-item:hover .command-list-item-icon-wrapper {
+        @apply bg-indigo-700/50 border-indigo-500;
+    }
+    .command-list-item-icon {
+        @apply w-5 h-5 text-indigo-400 transition-colors;
+    }
+    .command-list-item:hover .command-list-item-icon {
+        @apply text-white;
+    }
+    .command-list-item-title {
+        @apply font-bold text-white transition-colors;
+    }
+    .command-list-item:hover .command-list-item-title {
+        @apply text-indigo-300;
+    }
+    .command-list-item-subtitle {
+        @apply text-xs text-gray-400;
+    }
+    .command-list-item-arrow {
+        @apply w-5 h-5 text-gray-600 ml-auto transition-transform;
+    }
+    .command-list-item:hover .command-list-item-arrow {
+        @apply text-indigo-400 translate-x-1;
+    }
+    
+    .ticker-container {
+      @apply w-full overflow-hidden whitespace-nowrap;
+    }
+    .ticker-content {
+      @apply flex items-center h-full;
+      animation: scroll-left 40s linear infinite;
+      will-change: transform;
+    }
+
+    .ai-core-container, .ai-core, .ai-data-stream {
+        display: none;
+    }
+}
+
+@keyframes pulse-ring {
+    0% { width: 0; height: 0; opacity: 1; border-color: #818cf8; }
+    50% { width: 90%; height: 90%; opacity: 0.5; border-color: #38bdf8; }
+    100% { width: 100%; height: 100%; opacity: 0; border-color: #818cf8; }
+}
+
+@keyframes core-glow {
+    0%, 100% { box-shadow: 0 0 15px #38bdf8, 0 0 30px #4f46e5; }
+    50% { box-shadow: 0 0 25px #4ade80, 0 0 50px #818cf8; }
+}
+
+@keyframes holographic-rotate {
+    0% { transform: rotate(0deg) translateZ(0); }
+    100% { transform: rotate(360deg) translateZ(0); }
+}
+
+@keyframes data-dot-flow-1 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(10px, -5px) scale(1.1); }
+    66% { transform: translate(-5px, 10px) scale(0.9); }
+}
+@keyframes data-dot-flow-2 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    40% { transform: translate(-10px, 10px) scale(1.05); }
+    75% { transform: translate(5px, -15px) scale(0.95); }
+}
+@keyframes data-dot-flow-3 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    25% { transform: translate(15px, 5px) scale(1.1); }
+    80% { transform: translate(-10px, -10px) scale(1); }
+}
+@keyframes data-dot-flow-4 {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(5px, 5px) scale(1.05); }
+    90% { transform: translate(-5px, -5px) scale(1); }
+}
+
+.animate-data-dot-flow-1 { animation: data-dot-flow-1 15s ease-in-out infinite alternate; }
+.animate-data-dot-flow-2 { animation: data-dot-flow-2 18s ease-in-out infinite alternate; }
+.animate-data-dot-flow-3 { animation: data-dot-flow-3 12s ease-in-out infinite alternate; }
+.animate-data-dot-flow-4 { animation: data-dot-flow-4 20s ease-in-out infinite alternate; }
+
+
+@keyframes scroll-left {
+    0% { transform: translateX(0%); }
+    100% { transform: translateX(-50%); }
+}
+@keyframes simplified-orbit {
+  from { transform: rotate(0deg) translateX(0) }
+  to { transform: rotate(360deg) translateX(0) }
+}
+@keyframes rotate-globe {
+    0% { background-position-x: 0; }
+    100% { background-position-x: 100%; }
+}
+@keyframes pulse-icon {
+    0% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7); transform: scale(1); }
+    70% { box-shadow: 0 0 0 10px rgba(74, 222, 128, 0); transform: scale(1.3); }
+    100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); transform: scale(1); }
+}
+
+@keyframes stars-move {
+    from { transform: translateY(0px) translateZ(0); }
+    to { transform: translateY(-1000px) translateZ(0); }
+}
+@keyframes glowing {
+    from { background-position: 0 0; }
+    to { background-position: 400% 0; }
+}
+@keyframes data-flow {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-100%); }
+}
+@keyframes pulse-stream {
+    0%, 100% { transform: scale(1); opacity: 0.8; }
+    50% { transform: scale(3); opacity: 0.3; }
+}
+@keyframes pulse-core {
+    0%, 100% { box-shadow: 0 0 20px 0px rgba(129, 140, 248, 0.3), 0 0 40px 0px rgba(129, 140, 248, 0.2); transform: scale(1) translateZ(0); }
+    50% { box-shadow: 0 0 35px 10px rgba(129, 140, 248, 0.6), 0 0 60px 10px rgba(129, 140, 248, 0.4); transform: scale(1.05) translateZ(0); }
+}
+@keyframes rotate-glow-system {
+    0% { transform: translate(-50%, -50%) rotate(0deg) scale(0.8) translateZ(0); opacity: 0.5; }
+    50% { transform: translate(-50%, -50%) rotate(180deg) scale(1.0) translateZ(0); opacity: 0.7; }
+    100% { transform: translate(-50%, -50%) rotate(360deg) scale(0.8) translateZ(0); opacity: 0.5; }
+}
+@keyframes pan-grid {
+    0% { background-position: 0% 0%; }
+    100% { background-position: 48px 48px; }
+}
+
+@keyframes rotate-glow-slow {
+    from { transform: translate(-50%, -50%) rotate(0deg) translateZ(0); }
+    to { transform: translate(-50%, -50%) rotate(360deg) translateZ(0); }
+}
+@keyframes rotate-glow-fast {
+    from { transform: translate(-50%, -50%) rotate(0deg) translateZ(0); }
+    to { transform: translate(-50%, -50%) rotate(360deg) translateZ(0); }
+}
+
+@keyframes pulse-slow {
+    0%, 100% { opacity: 0.8; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.05); }
+}
+.animate-pulse-slow {
+    animation: pulse-slow 4s infinite ease-in-out;
+}
+
+@keyframes conscious-pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.7), 0 0 0 0 rgba(129, 140, 248, 0.5);
+    }
+    70% {
+        box-shadow: 0 0 0 15px rgba(56, 189, 248, 0), 0 0 0 30px rgba(129, 140, 248, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(56, 189, 248, 0), 0 0 0 0 rgba(129, 140, 248, 0);
+    }
+}
+
+@keyframes data-stream-flow {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+.engine-core-viz {
+    @apply w-28 h-28 rounded-full bg-indigo-900/90 flex flex-col items-center justify-center;
+    border: 3px solid #818CF8;
+    box-shadow: 0 0 10px #4F46E5;
+    animation: core-glow 3s infinite ease-in-out;
+}
+
+.holographic-panel-center {
+    @apply relative w-full h-full flex items-center justify-center;
+}
+.holographic-ring-1, .holographic-ring-2 {
+    @apply absolute border-2 rounded-full;
+}
+.holographic-ring-1 {
+    @apply w-48 h-48 border-sky-500/50;
+    animation: holographic-rotate 25s linear infinite;
+    box-shadow: 0 0 20px #38bdf8;
+}
+.holographic-ring-2 {
+    @apply w-64 h-64 border-indigo-500/50;
+    animation: holographic-rotate 40s linear infinite reverse;
+    box-shadow: 0 0 10px #4F46E5;
+}
+
+.data-dot {
+    will-change: transform;
+}
+

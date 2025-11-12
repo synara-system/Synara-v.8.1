@@ -1,0 +1,5 @@
+[
+  { "sector": "Technology", "changesPercentage": 1.25 },
+  { "sector": "Financial",  "changesPercentage": -0.45 },
+  { "sector": "Health Care","changesPercentage": 0.38 }
+]

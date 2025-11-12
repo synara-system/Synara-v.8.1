@@ -1,0 +1,539 @@
+// path: components/market/TabbedDataWidget.js
+'use client';
+import { useMemo, useState } from 'react';
+import {
+    Calendar,
+    Layers,
+    TrendingUp,
+    Bitcoin,
+    Users,
+    TrendingDown,
+    BarChart3,
+    Clock,
+    DollarSign,
+    ArrowUpRight,
+    ArrowDownRight,
+    Briefcase,
+    Globe,
+    FileText,
+    Percent,
+    Loader2 // Loader2 eklendi
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+// (FMP v4.1) Refactor
+// (FMP v1.5) Görsel İyileştirme (Fütüristik Tema)
+
+// === GÜNCELLEME v1.5 (Fütüristik Tema) ===
+const WIDGET_BASE_CLASSES = "bg-[#111827]/70 backdrop-blur-sm p-6 rounded-xl shadow-2xl transition-all duration-300 border border-indigo-700/50 hover:shadow-cyan-500/50";
+const WIDGET_HEADER_CLASSES = "flex items-center space-x-3 border-b border-indigo-700/50 pb-4 mb-4";
+// Fütüristik Sekme (Tab) Stilleri - v4.1: bg-cyan-600 -> bg-indigo-600
+const TAB_BUTTON_BASE = "flex items-center space-x-1.5 font-medium px-3 py-1.5 rounded-lg text-sm transition-colors duration-200";
+const TAB_BUTTON_ACTIVE = "bg-indigo-600 text-white shadow-lg shadow-cyan-500/50"; // Düzeltildi
+const TAB_BUTTON_INACTIVE = "text-gray-400 hover:bg-gray-700/50 hover:text-gray-200";
+// === GÜNCELLEME v1.5 SONU ===
+
+
+// --- (v4.0) Animasyon Varyantları (Korundu) ---
+const listContainerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+        opacity: 1,
+        transition: {
+            staggerChildren: 0.05,
+        },
+    },
+};
+
+const listItemVariants = {
+    hidden: { y: 10, opacity: 0 },
+    visible: { y: 0, opacity: 1 },
+};
+
+// --- (v4.1) AYRILMIŞ ALT WIDGET'LAR ---
+
+// SparkLine fonksiyonu sadece TabbedDataWidget için kullanılıyorsa burada kalabilir, ancak MemberDashboard'dan kaldırılmıştır.
+const SparkLine = ({
+  width = 120,
+  height = 40,
+  data = [],
+  color = "currentColor",
+}) => {
+  if (!data || data.length < 2) {
+    return (
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+        <text x={width / 2} y={height / 2} fill="#888" textAnchor="middle" dominantBaseline="middle" fontSize="10">
+          Veri kaynağı limitte
+        </text>
+      </svg>
+    );
+  }
+
+  const values = data.map(p => p.close);
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = max - min === 0 ? 1 : max - min; 
+
+  const points = data.map((point, i) => {
+    const x = (i / (data.length - 1)) * width;
+    const y = height - ((point.close - min) / range) * height;
+    return `${x},${y}`;
+  });
+
+  const pathD = "M " + points.join(" L ");
+
+  return (
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className="overflow-visible">
+      <path d={pathD} fill="none" stroke={color} strokeWidth="1.5" />
+    </svg>
+  );
+};
+
+
+// (v3.0) Ekonomik Takvim Widget'ı
+const EconomicCalendarWidget = ({ calendarData }) => {
+    const highImpactEvents = calendarData?.filter(e => e.impact === "High") || [];
+    const eventsToShow = highImpactEvents.length > 0 ? highImpactEvents.slice(0, 5) : calendarData?.slice(0, 5) || [];
+
+    if (!calendarData) {
+        return (
+            <div className='flex justify-center items-center h-48'>
+                <Loader2 className='w-6 h-6 animate-spin text-indigo-500 mr-2' />
+                <span className='text-gray-400'>Veri Yükleniyor...</span>
+            </div>
+        );
+    }
+    
+    return (
+        <div>
+            {/* Alt Widget Başlığı (Bu h3 sadece iç görsel amaçlıdır) */}
+            <h4 className='flex items-center space-x-2 text-md font-semibold text-cyan-400 mb-3'>
+                <Calendar className="w-4 h-4" />
+                <span>Ekonomik Takvim (TRT)</span>
+            </h4>
+            <motion.div 
+                className="mt-2 space-y-2 text-sm"
+                variants={listContainerVariants}
+                initial="hidden"
+                animate="visible"
+            >
+                {eventsToShow.length > 0 ? (
+                    eventsToShow.map((event, index) => (
+                        <motion.div 
+                            key={index} 
+                            className="flex justify-between items-center p-2 rounded-lg bg-gray-800/50 hover:bg-gray-700/50 transition-colors duration-200"
+                            variants={listItemVariants}
+                        >
+                            <div className="flex items-center overflow-hidden mr-2">
+                                <span className={`mr-2 font-bold ${event.impact === 'High' ? 'text-red-500' : (event.impact === 'Medium' ? 'text-yellow-500' : 'text-gray-500')}`}>
+                                    {event.country}
+                                </span>
+                                <span className="text-gray-300 flex-1 truncate">{event.event}</span>
+                            </div>
+                            <div className="text-right text-gray-400 flex-shrink-0">
+                                <div className="font-medium">{event.date}</div>
+                                <div className="text-xs">{event.time}</div>
+                            </div>
+                        </motion.div>
+                    ))
+                ) : (
+                    <div className="text-gray-500 text-sm">Veri kaynağı limitte / bakımda.</div>
+                )}
+            </motion.div>
+        </div>
+    );
+};
+
+
+// (v2.2) Kripto Fiyatları Widget'ı
+const CryptoQuotesWidget = ({ cryptoData }) => {
+    const quotes = Array.isArray(cryptoData) ? cryptoData : Object.values(cryptoData || {});
+
+    if (!cryptoData) {
+        return (
+            <div className='flex justify-center items-center h-48'>
+                <Loader2 className='w-6 h-6 animate-spin text-indigo-500 mr-2' />
+                <span className='text-gray-400'>Veri Yükleniyor...</span>
+            </div>
+        );
+    }
+
+    return (
+        <div>
+            {/* Alt Widget Başlığı */}
+            <h4 className='flex items-center space-x-2 text-md font-semibold text-orange-500 mb-3'>
+                <Bitcoin className="w-4 h-4" />
+                <span>Kripto Fiyatları</span>
+            </h4>
+            <motion.div 
+                className="mt-2 space-y-2 text-sm"
+                variants={listContainerVariants}
+                initial="hidden"
+                animate="visible"
+            >
+                {quotes.length > 0 ? (
+                    quotes.map((coin, index) => {
+                        const isUp = coin.changePercentage ? coin.changePercentage >= 0 : (coin.change ? coin.change >= 0 : true);
+                        const change = coin.changesPercentageNum || coin.changePercentage || coin.change || 0;
+                        const colorClass = isUp ? 'text-green-500' : 'text-red-500';
+
+                        return (
+                            <motion.div 
+                                key={index} 
+                                className="flex justify-between items-center p-2 rounded-lg bg-gray-800/50 hover:bg-gray-700/50 transition-colors duration-200"
+                                variants={listItemVariants}
+                            >
+                                <div className="flex flex-col">
+                                    <span className="font-bold text-white">{coin.symbol}</span>
+                                    <span className="text-xs text-gray-400">{coin.name}</span>
+                                </div>
+                                <div className="text-right">
+                                    <span className="font-medium text-gray-200">${(coin.price || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                    <span className={`block text-xs ${colorClass}`}>
+                                        {isUp ? '+' : ''}{change.toFixed(2)}%
+                                    </span>
+                                </div>
+                            </motion.div>
+                        );
+                    })
+                ) : (
+                    <div className="text-gray-500 text-sm">Veri kaynağı limitte / bakımda.</div>
+                )}
+            </motion.div>
+        </div>
+    );
+};
+
+// (v2.2) Insider Trading Widget'ı
+const InsiderTradingWidget = ({ insiderData }) => {
+    if (!insiderData) {
+        return (
+            <div className='flex justify-center items-center h-48'>
+                <Loader2 className='w-6 h-6 animate-spin text-indigo-500 mr-2' />
+                <span className='text-gray-400'>Veri Yükleniyor...</span>
+            </div>
+        );
+    }
+    
+    return (
+        <div>
+             {/* Alt Widget Başlığı */}
+            <h4 className='flex items-center space-x-2 text-md font-semibold text-indigo-400 mb-3'>
+                <Users className="w-4 h-4" />
+                <span>Son Insider İşlemleri</span>
+            </h4>
+            <motion.div 
+                className="mt-2 space-y-2 text-sm"
+                variants={listContainerVariants}
+                initial="hidden"
+                animate="visible"
+            >
+                {insiderData && insiderData.length > 0 ? (
+                    insiderData.slice(0, 5).map((tx, index) => {
+                        const isBuy = tx.transactionType === 'P-Purchase';
+                        const colorClass = isBuy ? 'text-green-500' : 'text-red-500';
+
+                        return (
+                            <motion.div 
+                                key={index} 
+                                className="p-2 rounded-lg bg-gray-800/50 hover:bg-gray-700/50 transition-colors duration-200"
+                                variants={listItemVariants}
+                            >
+                                <div className="flex justify-between items-center">
+                                    <span className="font-bold text-white">{tx.symbol}</span>
+                                    <span className={`font-medium ${colorClass}`}>
+                                        {isBuy ? 'Alış' : 'Satış'} (SEC Form 4)
+                                    </span>
+                                </div>
+                                <div className="text-xs text-gray-400 mt-1 truncate">
+                                    {tx.reportingName}
+                                </div>
+                                <div className="text-xs text-gray-400 mt-1">
+                                    {new Date(tx.transactionDate).toLocaleDateString('tr-TR')}
+                                    <span className="ml-2">
+                                        @{parseFloat(tx.price || 0).toFixed(2)} (${(parseFloat(tx.securitiesTransacted || 0) * parseFloat(tx.price || 0)).toLocaleString(undefined, { maximumFractionDigits: 0 })})
+                                    </span>
+                                </div>
+                            </motion.div>
+                        );
+                    })
+                ) : (
+                    <div className="text-gray-500 text-sm">Veri kaynağı limitte / bakımda.</div>
+                )}
+            </motion.div>
+        </div>
+    );
+};
+
+
+// (v2.1) Sektör Performansı Widget'ı
+const SectorPerformanceWidget = ({ sectorData }) => {
+    const sortedData = useMemo(() => {
+        if (!sectorData || sectorData.length === 0) return [];
+        return sectorData
+            .map(s => ({
+                ...s,
+                percentage: parseFloat(String(s.changesPercentage).replace('%', ''))
+            }))
+            .sort((a, b) => b.percentage - a.percentage);
+    }, [sectorData]);
+
+    if (!sectorData) {
+        return (
+            <div className='flex justify-center items-center h-48'>
+                <Loader2 className='w-6 h-6 animate-spin text-indigo-500 mr-2' />
+                <span className='text-gray-400'>Veri Yükleniyor...</span>
+            </div>
+        );
+    }
+    
+    return (
+        <div>
+            {/* Alt Widget Başlığı */}
+            <h4 className='flex items-center space-x-2 text-md font-semibold text-cyan-400 mb-3'>
+                <Layers className="w-4 h-4" />
+                <span>Sektör Performansı</span>
+            </h4>
+            <motion.div 
+                className="mt-2 space-y-2 text-sm"
+                variants={listContainerVariants}
+                initial="hidden"
+                animate="visible"
+            >
+                {sortedData.length > 0 ? (
+                    sortedData.map((sector, index) => {
+                        const isUp = sector.percentage >= 0;
+                        const colorClass = isUp ? 'text-green-500' : 'text-red-500';
+                        const width = Math.min(Math.abs(sector.percentage) * 20, 100); 
+
+                        return (
+                            <motion.div 
+                                key={index} 
+                                className="space-y-1 p-1 rounded-lg hover:bg-gray-700/50 transition-colors duration-200"
+                                variants={listItemVariants}
+                            >
+                                <div className="flex justify-between items-center">
+                                    <span className="text-gray-300">{sector.sector}</span>
+                                    <span className={`font-medium ${colorClass}`}>
+                                        {isUp ? '+' : ''}{sector.percentage.toFixed(2)}%
+                                    </span>
+                                </div>
+                                <div className="w-full h-1.5 bg-gray-700 rounded-full overflow-hidden">
+                                    <div 
+                                        className={`h-full rounded-full ${isUp ? 'bg-green-500' : 'bg-red-500'}`}
+                                        style={{ width: `${width}%` }}
+                                    ></div>
+                                </div>
+                            </motion.div>
+                        );
+                    })
+                ) : (
+                    <div className="text-gray-500 text-sm">Veri kaynağı limitte / bakımda.</div>
+                )}
+            </motion.div>
+        </div>
+    );
+};
+
+
+// (v2.0) Top Gainers Widget'ı
+const TopGainersWidget = ({ gainersData }) => {
+    const sortedData = useMemo(() => {
+        if (!gainersData || gainersData.length === 0) return [];
+        return [...gainersData]
+            .map(g => ({ ...g, changesPercentageNum: parseFloat(String(g.changesPercentage).replace('%','')) }))
+            .sort((a, b) => b.changesPercentageNum - a.changesPercentageNum);
+    }, [gainersData]);
+
+    if (!gainersData) {
+        return (
+            <div className='flex justify-center items-center h-48'>
+                <Loader2 className='w-6 h-6 animate-spin text-indigo-500 mr-2' />
+                <span className='text-gray-400'>Veri Yükleniyor...</span>
+            </div>
+        );
+    }
+    
+    return (
+        <div>
+            {/* Alt Widget Başlığı */}
+            <h4 className='flex items-center space-x-2 text-md font-semibold text-green-500 mb-3'>
+                <TrendingUp className="w-4 h-4" />
+                <span>Öne Çıkanlar</span>
+            </h4>
+            <motion.div 
+                className="mt-2 space-y-2 text-sm"
+                variants={listContainerVariants}
+                initial="hidden"
+                animate="visible"
+            >
+                {sortedData.length > 0 ? (
+                    sortedData.slice(0, 5).map((stock, index) => (
+                        <motion.div 
+                            key={index} 
+                            className="flex justify-between items-center p-2 rounded-lg bg-gray-800/50 hover:bg-gray-700/50 transition-colors duration-200"
+                            variants={listItemVariants}
+                        >
+                            <div className="flex flex-col overflow-hidden mr-2">
+                                <span className="font-bold text-white truncate">{stock.symbol}</span>
+                                <span className="text-xs text-gray-400 truncate max-w-28">{stock.name || stock.companyName || '...'}</span>
+                            </div>
+                            <div className="text-right flex-shrink-0">
+                                <span className="font-medium text-gray-200">${(stock.price || 0).toFixed(2)}</span>
+                                <span className="block text-xs text-green-500">
+                                    +{stock.changesPercentageNum.toFixed(2)}%
+                                </span>
+                            </div>
+                        </motion.div>
+                    ))
+                ) : (
+                    <div className="text-gray-500 text-sm">Veri kaynağı limitte / bakımda.</div>
+                )}
+            </motion.div>
+        </div>
+    );
+};
+
+
+// (v2.0) Top Losers Widget'ı
+const TopLosersWidget = ({ losersData }) => {
+    const sortedData = useMemo(() => {
+        if (!losersData || losersData.length === 0) return [];
+        return [...losersData]
+            .map(g => ({ ...g, changesPercentageNum: parseFloat(String(g.changesPercentage).replace('%','')) }))
+            .sort((a, b) => a.changesPercentageNum - b.changesPercentageNum);
+    }, [losersData]);
+
+    if (!losersData) {
+        return (
+            <div className='flex justify-center items-center h-48'>
+                <Loader2 className='w-6 h-6 animate-spin text-indigo-500 mr-2' />
+                <span className='text-gray-400'>Veri Yükleniyor...</span>
+            </div>
+        );
+    }
+    
+    return (
+        <div>
+             {/* Alt Widget Başlığı */}
+            <h4 className='flex items-center space-x-2 text-md font-semibold text-red-500 mb-3'>
+                <TrendingDown className="w-4 h-4" />
+                <span>Geri Kalanlar</span>
+            </h4>
+            <motion.div 
+                className="mt-2 space-y-2 text-sm"
+                variants={listContainerVariants}
+                initial="hidden"
+                animate="visible"
+            >
+                {sortedData.length > 0 ? (
+                    sortedData.slice(0, 5).map((stock, index) => (
+                        <motion.div 
+                            key={index} 
+                            className="flex justify-between items-center p-2 rounded-lg bg-gray-800/50 hover:bg-gray-700/50 transition-colors duration-200"
+                            variants={listItemVariants}
+                        >
+                            <div className="flex flex-col overflow-hidden mr-2">
+                                <span className="font-bold text-white truncate">{stock.symbol}</span>
+                                <span className="text-xs text-gray-400 truncate max-w-28">{stock.name || stock.companyName || '...'}</span>
+                            </div>
+                            <div className="text-right flex-shrink-0">
+                                <span className="font-medium text-gray-200">${(stock.price || 0).toFixed(2)}</span>
+                                <span className="block text-xs text-red-500">
+                                    {stock.changesPercentageNum.toFixed(2)}%
+                                </span>
+                            </div>
+                        </motion.div>
+                    ))
+                ) : (
+                    <div className="text-gray-500 text-sm">Veri kaynağı limitte / bakımda.</div>
+                )}
+            </motion.div>
+        </div>
+    );
+};
+
+
+// --- (v4.1) ANA SEKME (TAB) WIDGET'I ---
+export default function TabbedDataWidget({ marketData }) {
+    const [activeTab, setActiveTab] = useState('movers'); 
+
+    const renderTabContent = () => {
+        switch (activeTab) {
+            case 'movers':
+                return (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <TopGainersWidget gainersData={marketData.activesData?.topGainers} />
+                        <TopLosersWidget losersData={marketData.activesData?.topLosers} />
+                    </div>
+                );
+            case 'detail':
+                return (
+                    <div className="space-y-6">
+                        <SectorPerformanceWidget sectorData={marketData.sectorPerformanceData} />
+                        <InsiderTradingWidget insiderData={marketData.insiderTradingData} />
+                    </div>
+                );
+            case 'calendar':
+                return <EconomicCalendarWidget calendarData={marketData.calendarData} />;
+            case 'crypto':
+                return <CryptoQuotesWidget cryptoData={marketData.cryptoQuotesData} />;
+            default:
+                return null;
+        }
+    };
+
+    return (
+        // === GÜNCELLEME v1.5 (Fütüristik Tema) ===
+        // Ana 'widget-base' (CSS) yerine 'WIDGET_BASE_CLASSES' (inline) kullanıldı.
+        <div className={WIDGET_BASE_CLASSES}>
+            
+            {/* V4.1 EKLEME: Ana Widget Başlığı (Tutarlılık için) */}
+            <h3 className={WIDGET_HEADER_CLASSES}>
+                <TrendingUp className="w-5 h-5 mr-3 text-cyan-400" /> 
+                <span className="text-gray-200 text-lg font-semibold">Piyasa Veri Sekmeleri</span>
+            </h3>
+
+            {/* Sekme (Tab) butonları fütüristik temaya göre yeniden stilize edildi. */}
+            <div className="flex flex-wrap items-center gap-2 mb-6">
+                <button 
+                    className={`${TAB_BUTTON_BASE} ${activeTab === 'movers' ? TAB_BUTTON_ACTIVE : TAB_BUTTON_INACTIVE}`}
+                    onClick={() => setActiveTab('movers')}
+                >
+                    <TrendingUp className="w-4 h-4 mr-1.5" /> Piyasalar
+                </button>
+                <button 
+                    className={`${TAB_BUTTON_BASE} ${activeTab === 'detail' ? TAB_BUTTON_ACTIVE : TAB_BUTTON_INACTIVE}`}
+                    onClick={() => setActiveTab('detail')}
+                >
+                    <Layers className="w-4 h-4 mr-1.5" /> Detay
+                </button>
+                <button 
+                    className={`${TAB_BUTTON_BASE} ${activeTab === 'calendar' ? TAB_BUTTON_ACTIVE : TAB_BUTTON_INACTIVE}`}
+                    onClick={() => setActiveTab('calendar')}
+                >
+                    <Calendar className="w-4 h-4 mr-1.5" /> Takvim
+                </button>
+                <button 
+                    className={`${TAB_BUTTON_BASE} ${activeTab === 'crypto' ? TAB_BUTTON_ACTIVE : TAB_BUTTON_INACTIVE}`}
+                    onClick={() => setActiveTab('crypto')}
+                >
+                    <Bitcoin className="w-4 h-4 mr-1.5" /> Kripto
+                </button>
+            </div>
+
+            {/* (v4.0) Aktif Sekme İçeriği (Stil değişmedi) */}
+            <AnimatePresence mode="wait">
+                <motion.div
+                    key={activeTab}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                >
+                    {renderTabContent()}
+                </motion.div>
+            </AnimatePresence>
+        </div>
+    );
+}

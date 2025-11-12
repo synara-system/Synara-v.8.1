@@ -1,0 +1,4 @@
+[
+  { "symbol": "AAPL", "changesPercentage": 2.34, "price": 172.10, "companyName": "Apple Inc" },
+  { "symbol": "MSFT", "changesPercentage": 1.98, "price": 408.25, "companyName": "Microsoft Corp" }
+]

@@ -1,0 +1,4 @@
+[
+  { "country": "US", "event": "FOMC Interest Rate Decision", "datetime": "2025-10-30T18:00:00Z", "actual": null, "forecast": "5.50%", "previous": "5.50%" },
+  { "country": "TR", "event": "TCMB Politika Faizi",          "datetime": "2025-11-21T11:00:00Z", "actual": null, "forecast": "45.00%", "previous": "45.00%" }
+]
